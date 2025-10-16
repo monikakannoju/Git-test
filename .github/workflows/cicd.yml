@@ -137,3 +137,22 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: monika57/bankapp:latest
+          
+  deploy_to_target_server:
+     runs-on: self-hosted
+     needs: build_docker_image_and_push
+
+     steps:
+     - name: Deploy to target VM
+       run: |
+        ssh -o StrictHostKeyChecking=no user_1@192.168.3.119 << 'EOF'
+          # Stop running container if any
+          docker stop bankapp || true
+          docker rm bankapp || true
+
+          # Pull the latest image from Docker Hub
+          docker pull monika57/bankapp:latest
+
+          # Run the new container
+          docker run -d --name bankapp -p 8080:8080 monika57/bankapp:latest
+        EOF
